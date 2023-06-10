@@ -5,7 +5,7 @@ const path = require('path');
 // Function to create unique ids provided in course content
 const uuid = require('../helpers/uuid');
 
-const dbNotes = require('../db/notes.json');
+let dbNotes = require('../db/notes.json');
 
 // GET route for retrieving all notes
 router.get('/', (req, res) => {
@@ -27,7 +27,7 @@ router.post('/', (req, res) => {
     const newNote = {
       title,
       text,
-      note_id: uuid(),
+      id: uuid(),
     };
 
     // adds note to array
@@ -42,11 +42,15 @@ router.post('/', (req, res) => {
 })
 
 router.delete('/:id', (req, res) => {
-  const noteToDelete = dbNotes.filter(note => note.id !== req.params.id);
-
-  fs.writeFileSync('./db/notes.json', JSON.stringify(noteToDelete));
-
-  fs.readFile.json(noteToDelete);
+  const deleteNote = dbNotes.some(note => note.id === req.params.id);
+  if (deleteNote) {
+      dbNotes = dbNotes.filter(note => note.id !== req.params.id);
+      // Write the filtered notes back to the file
+      fs.writeFileSync('./db/notes.json', JSON.stringify(dbNotes));
+      res.json(dbNotes);
+  } else {
+      res.status(400).json({ error: "No note found with that id" });
+  };
 });
 
 module.exports = router;
