@@ -1,35 +1,54 @@
 const router = require('express').Router();
+const fs = require('fs');
 
 // Function to create unique ids provided in course content
 const uuid = require('../../helpers/uuid');
 
-// Function for reading and writing JSON file provided in course
-const { readFromFile, readAndAppend } = require('../../helpers/fsUtils');
+let db = JSON.parse(fs.readFileSync('./db/notes.json', 'utf8'));
 
-// GET route for retrieving notes
+// GET route for retrieving all notes
 router.get('/', (req, res) => {
-    console.info(`${req.method} request received for notes`);
-    readFromFile('./db/notes.json').then((data) => res.json(JSON.parse(data)));
+  console.info(`${req.method} request received for notes`);
+  res.json(db);
+});
+
+// GET route for retrieving a note by id
+router.get('/:id', (req,res) => {
+  const note = db.find(note => note.note_id === req.params.id);
+  res.json(note);
 });
 
 // POST Route for a new note
 router.post('/', (req, res) => {
-    console.info(`${req.method} request received to add a note`);
+  console.info(`${req.method} request received to add a note`);
 
-    const { title, text } = req.body;
+  const { title, text } = req.body;
 
-    if(req.body) {
-        const newNote = {
-            title,
-            text,
-            note_id: uuid(),
-        };
+  if(req.body) {
+    const newNote = {
+      title,
+      text,
+      note_id: uuid(),
+    };
 
-        readAndAppend(newNote, './db/notes.json');
-        res.json(`Note added successfully!`);
-    } else {
-        res.errored(`Error in adding note`);
-    }
+    db.push(newNote);
+
+    fs.writeFileSync('./db/notes.json', JSON.stringify(db));
+
+    res.json(db);
+  } else {
+    res.status(400).send('Error in adding note');
+  }
+});
+
+router.delete('/:id', (req, res) => {
+  db = db.filter((currentNote) => {
+    return currentNote.note_id != req.params.id;
+  });
+
+  fs.writeFileSync('./db/notes.json', JSON.stringify(db));
+  res.json(db);
 });
 
 module.exports = router;
+
