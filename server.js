@@ -1,9 +1,6 @@
 const express = require('express');
-const fs = require('fs');
 
 const app = express();
-
-const routes = require('./routes');
 
 const PORT = process.env.PORT || 3001;
 
@@ -14,7 +11,10 @@ app.use(express.urlencoded({ extended: true}));
 // Middleware to serve up static assets from the public folder
 app.use(express.static('public'));
 
-app.use(routes);
+// Routes
+app.use('/api/notes', require('./routes/apiRoutes'));
+
+app.use('/', require('./routes/htmlRoutes'));
 
 app.listen(PORT, () =>
     console.log(`App listening at http:localhost:${PORT}`)
